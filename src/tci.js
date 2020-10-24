@@ -3,7 +3,7 @@ import './css/App.css';
 import './css/styles.css'
 import FileUploader from './fileupload/fileuploader';
 
-import chatbot from './chatbot.js'
+import Chatbot from './chatbot.js'
 
 export default class TCI extends React.Component {
 
@@ -15,12 +15,7 @@ export default class TCI extends React.Component {
     }
   }
 
-  btnStyle = {
-    margin: "5px"
-  };
-
   handleUpload = (messages, windows, file) => {
-    console.log(file.name, windows)
     this.setState({messages, windows, fileName:file.name})
   }
 
@@ -37,17 +32,10 @@ export default class TCI extends React.Component {
         {this.state.fileName && 
         <div>Using: {this.state.fileName}</div>}
         <br/>
-        <div style={{display:"inline-flex"}}>
-          <button style={this.btnStyle} onClick={chatbot.play(this.state.windows, this.state.messages)}>
-            Play
-          </button>
-          <button style={this.btnStyle} onClick={chatbot.pause}>
-            Pause
-          </button>
-          <button style={this.btnStyle} onClick={chatbot.reset}>
-            Reset
-          </button>
-        </div>
+        <Chatbot 
+          windows = {this.state.windows}
+          messages ={this.state.messages}
+        />
         
         <div id="snackbar"></div>
       </header>
