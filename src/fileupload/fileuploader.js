@@ -24,7 +24,6 @@ export default class FileUploader extends React.Component {
         if (this.props.maxFileCount){
             if (acceptedFiles.length > this.props.maxFileCount){
                 for (var i=1; i<acceptedFiles.length; i++){
-                    console.log(acceptedFiles[i])
                     rejectedFiles.push({
                         file: acceptedFiles[i],
                         errors: [{message:"Limited to upload " + this.props.maxFileCount + " at a time."}]
