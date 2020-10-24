@@ -18,16 +18,33 @@ export default class Chatbot extends React.Component {
     debug(xmpp, true)
 
     xmpp.on('error', err=>{
-      console.log("error", err)
+      snackbar.alert("chatbot error: " + err, 5000, "red")
     })
 
     xmpp.on("stanza", stanza => {
       if (stanza.is('message')) {
         if (stanza.attrs.from.indexOf('chatbot')===-1){
-          if (stanza.children[2]){
-            //console.log("received message:" , stanza.children[2].attrs.stamp)
+          if (stanza.children[3]){
+            if (stanza.children[3].attrs.stamp !== undefined){
+              // console.log("read old message")
+            }
+          } else {
+            if (stanza.children[0]){
+              if (stanza.children[0].name !=="subject"){
+                // Read message text with 
+                // stanza.children[0].children[0]
+                // AI could respond here with messages
+
+                // This just autocopies every message (demo response)
+                  // var msg = {
+                  //   window: "#c2_coord",
+                  //   text: "copy",
+                  //   callsign: "chatbot"
+                  // }
+                  // this.sendMessage(msg)
+              }
+            }
           }
-          //console.log(stanza)
         }
       }
     })
