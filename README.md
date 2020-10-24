@@ -23,6 +23,25 @@ React can only access env variables with REACT_APP_ prefix.
 
 After cloning the project, use any of the following.
 
+## Recommended
+
+Using the Dockerfile:
+
+[Development] docker build -t tci:dev .
+[Development] docker run \
+    -it \
+    --rm \
+    -v ${PWD}:/app \
+    -v /app/node_modules \
+    -p 3001:3000 \
+    -e CHOKIDAR_USEPOLLING=true \
+    tci:dev
+[Production] docker build -f Dockerfile.prod -t tci:prod .
+[Production] docker run -it --rm -p 1337:80 tci:prod
+
+
+
+
 ## Available Scripts
 
 In the project directory, you can run:
