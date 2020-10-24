@@ -3,6 +3,24 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 This "Transverse Chat Injector" reads an excel file of messages / windows to inject messages 
 to any XMPP-based chat server. Designed for simulation of group messaging.
 
+For development and prodution, you will need .env files in src with the following: 
+
+REACT_APP_XMPP_SERVICE=(your service) ex: ws://localhost:7070/ws \
+REACT_APP_XMPP_DOMAIN=(your server IP) ex: localhost \
+REACT_APP_XMPP_USERNAME=(xmpp username) ex: chatbot \
+REACT_APP_XMPP_PASSWORD=(xmpp password) ex: admin \
+REACT_APP_XMPP_CONFERENCE=(groupchat service) ex: conference.computer-name \
+REACT_APP_XMPP_SIMTIME=(current hh:mm:ss of sim) ex: 16:30:05
+
+Options for .env include: \
+.env (default load) \
+.env.local (trumps .env) \
+.env.development (loaded in development mode) \
+.env.production (loaded in production) \
+.env.(mode).local (trumps the two above) 
+
+React can only access env variables with REACT_APP_ prefix.
+
 After cloning the project, use any of the following.
 
 ## Available Scripts

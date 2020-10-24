@@ -25,9 +25,9 @@ export default class Chatbot extends React.Component {
       if (stanza.is('message')) {
         if (stanza.attrs.from.indexOf('chatbot')===-1){
           if (stanza.children[2]){
-            console.log("received message:" , stanza.children[2].attrs.stamp)
+            //console.log("received message:" , stanza.children[2].attrs.stamp)
           }
-          console.log(stanza)
+          //console.log(stanza)
         }
       }
     })
@@ -186,14 +186,22 @@ export default class Chatbot extends React.Component {
         // next JS event. For now, error and have the user press "connect"
         snackbar.alert("Chatbot is not connected! Press the connect button.", 5000, "red")
         return;
+      } else if (this.xmpp.status !== "online"){
+        snackbar.alert("Chatbot is not online. Check connection settings.", 5000, "red")
+        return;
       }
-      
+
+      var regex = new RegExp("[0-9][0-9]:[0-9][0-9]:[0-9][0-9]")
+      var goodTime = regex.test(this.state.simtime)
       if (this.props.filename === undefined){
         snackbar.alert("No file was selected!",5000,"red"); 
         return;
       }
       else if (this.props.messages.length === 0){
         snackbar.alert("No messages were loaded!",5000,"yellow"); 
+        return;
+      } else if (!goodTime){
+        snackbar.alert("Invalid start time. Check settings.", 5000, "red")
         return;
       }
 
