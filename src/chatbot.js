@@ -1,6 +1,6 @@
 import snackbar from './alert'
 
-import './snackbar.css'
+import './css/snackbar.css'
 
 const {client, xml} = require('@xmpp/client')
 const debug = require('@xmpp/debug')
@@ -120,6 +120,8 @@ class Chatbot extends Object {
       console.log("---- PLAY ----")
       
       msgs.forEach((msg) => {
+        console.log(msg)
+        msg.text = "<"+msg.callsign+"> " + msg.text
         var date = new Date()
         var month = date.getMonth()
         var day = date.getDate()
@@ -138,14 +140,10 @@ class Chatbot extends Object {
 
       if (!this.interval){
         this.init()
-            
-        console.log("trying to set presence in rooms...")
-      this.setPresenceInRooms(this.windows)
-        console.log("sending test message")
-      this.sendMessage("#test", "text")
+        this.setPresenceInRooms(this.windows)
 
         snackbar.alert("Injector started!", 3000, 'green')
-        var simStart = new Date(2020, 9, 22, 16, 30, 0).getTime();
+        var simStart = new Date(2020, 9, 23, 16, 30, 0).getTime();
         this.interval = setInterval(this.checkMessages(Date.now(), simStart),500)
       }
     }

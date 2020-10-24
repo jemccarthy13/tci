@@ -1,6 +1,6 @@
 import React from 'react';
-import './App.css';
-import './styles.css'
+import './css/App.css';
+import './css/styles.css'
 import FileUploader from './fileupload/fileuploader';
 
 import chatbot from './chatbot.js'

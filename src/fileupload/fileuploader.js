@@ -6,7 +6,7 @@ import XLSX from 'xlsx'
 import FileReject from './filereject'
 import FileAccept from './fileaccept'
 
-import '../fileuploader.css'
+import '../css/fileuploader.css'
 
 /**
  * FileUploader provides a Component to render a File Dropzone.
