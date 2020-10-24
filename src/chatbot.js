@@ -7,35 +7,21 @@ const {client, xml} = require('@xmpp/client')
 const debug = require('@xmpp/debug')
 
 export default class Chatbot extends React.Component {
-  CONFERENCE = process.env.REACT_APP_XMPP_CONFERENCE
-  SERVICE = process.env.REACT_APP_XMPP_SERVICE
-  DOMAIN = process.env.REACT_APP_XMPP_DOMAIN
-  USERNAME = process.env.REACT_APP_XMPP_USERNAME
-  PASSWORD = process.env.REACT_APP_XMPP_PASSWORD
 
-  xmpp = client({
-    service: this.SERVICE,
-    domain: this.DOMAIN,
-    username: this.USERNAME,
-    password: this.PASSWORD,
-  })
+  newXmpp(service, domain, username, password){
+    let xmpp = client({
+      service: service,
+      domain: domain,
+      username: username,
+      password: password
+    })
+    debug(xmpp, true)
 
-  constructor(){
-    super()
-    debug(this.xmpp, true)
-
-    this.state={
-      sentMessages:[],
-      roomsOnline:[],
-      messages:[],
-      initMessages:[],
-    }
-
-    this.xmpp.on('error', err=>{
+    xmpp.on('error', err=>{
       console.log("error", err)
     })
 
-    this.xmpp.on("stanza", stanza => {
+    xmpp.on("stanza", stanza => {
       if (stanza.is('message')) {
         if (stanza.attrs.from.indexOf('chatbot')===-1){
           if (stanza.children[2]){
@@ -46,11 +32,38 @@ export default class Chatbot extends React.Component {
       }
     })
 
-    this.xmpp.on('online', async address =>{
-      this.setOnline()
+    xmpp.on('online', async address =>{
+      this.setOnline()      
+      let onlinemsgs = []
+      let msg={
+        time:"",
+        window:"",
+        callsign:"system",
+        text:"Connected to XMPP server as " + this.xmpp.jid.local
+      }
+      onlinemsgs.push(msg)
+      this.setState({sentMessages: this.state.sentMessages.concat(onlinemsgs)})
     })
 
-    this.xmpp.start().catch(console.error)
+    xmpp.start().catch(console.error)
+    return xmpp;
+  }
+
+  CONFERENCE = process.env.REACT_APP_XMPP_CONFERENCE
+  SERVICE = process.env.REACT_APP_XMPP_SERVICE
+  DOMAIN = process.env.REACT_APP_XMPP_DOMAIN
+  USERNAME = process.env.REACT_APP_XMPP_USERNAME
+  PASSWORD = process.env.REACT_APP_XMPP_PASSWORD
+
+  constructor(){
+    super()
+
+    this.state={
+      sentMessages:[],
+      roomsOnline:[],
+      messages:[],
+      initMessages:[],
+    }
   }
 
   checkMessages = (startTime) => {
@@ -60,8 +73,7 @@ export default class Chatbot extends React.Component {
         var deltaSec = Math.floor(delta/1000); // convert to seconds
         var deltaSimSec = ((msg.timestamp - this.state.simStart)/ 1000 )
         if (deltaSec >= deltaSimSec){
-          this.setPresence(msg.window)
-          this.sendMessage(msg.window, "<"+msg.callsign+">"+msg.text)
+          this.sendMessage(msg)
 
           var sentMsg = this.state.messages.splice(idx, 1)
           
@@ -102,13 +114,17 @@ export default class Chatbot extends React.Component {
     this.setState({sentMessages: this.state.sentMessages.concat(onlinemsgs)})
   }
 
-  async sendMessage(room, text){
+  async sendMessage(message){
     const msg = xml(
       'message',
-      {type: 'groupchat', to: room+"@"+this.CONFERENCE},
-      xml('body', {}, text)
+      {type: 'groupchat', to: message.window+"@"+this.CONFERENCE},
+      xml('body', {}, "<"+message.callsign+"> "+message.text)
     )
     await this.xmpp.send(msg)
+  }
+
+  connect = () =>{
+    this.xmpp = this.newXmpp(this.SERVICE, this.DOMAIN, this.USERNAME, this.PASSWORD)
   }
 
   play = async () => {
@@ -172,6 +188,15 @@ export default class Chatbot extends React.Component {
       msgSentStr += msg.time+"-"+msg.window+"-<"+msg.callsign+"> "+msg.text+"\r\n-------------\r\n"
     })
     return (<div style={{width:"100%"}}>
+        <div>Settings:
+          <div><label>Sim Time: </label><input defaultValue="hh:mm:ss"/></div>
+          <div><label>XMPP Service: </label><input defaultValue={this.SERVICE}/></div>
+          <div><label>Domain: </label><input defaultValue={this.DOMAIN}/></div>
+          <div><label>Conference: </label><input defaultValue={this.CONFERENCE}/></div>
+          <div><label>Usename: </label><input defaultValue={this.USERNAME}/></div>
+          <div><label>Password: </label><input defaultValue={this.PASSWORD}/></div>
+          <button onClick={this.connect}>Connect</button>
+        </div>
         <div style={{width:"100%", textAlign:"center", alignItems:"center"}}>
           <button style={this.btnStyle} onClick={this.play}>
             Play
