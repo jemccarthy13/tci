@@ -34,7 +34,6 @@ export default class Chatbot extends React.Component {
                 // Read message text with 
                 // stanza.children[0].children[0]
                 // AI could respond here with messages
-
                 // This just autocopies every message (demo response)
                   // var msg = {
                   //   window: "#c2_coord",
@@ -189,12 +188,11 @@ export default class Chatbot extends React.Component {
       var month = date.getMonth()
       var day = date.getDate()
       var year = date.getFullYear()
-
       var timeSplit = msg.time.split(":")
       
       var dt = new Date(year, month, day, parseInt(timeSplit[0]), parseInt( timeSplit[1]), parseInt(timeSplit[2]))
-
       msg.timestamp = dt.getTime()
+      msg.date = dt
     })
 
     if (!this.state.interval){
@@ -223,23 +221,29 @@ export default class Chatbot extends React.Component {
       }
 
       this.setPresenceInRooms()
-      this.setState({messages:[...this.props.messages], initMessages: [...this.props.messages]})
 
       snackbar.alert("Injector started!", 3000, 'green')
       
       var today = new Date()
       var time = this.getUserSimTime()
-      await this.setState({simStart:new Date(
+
+      var startDate = new Date(
         today.getFullYear(), 
         today.getMonth(),
         today.getDate(),
         time.hours,
         time.minutes,
         time.seconds) 
+      
+      var msgs = this.props.messages.filter((msg)=>{
+        return msg.date >= startDate
       })
-    
-      this.setState( {
-        interval: setInterval(this.checkMessages(Date.now()),500)
+      
+      this.setState({
+        messages:[...msgs], 
+        initMessages: [...msgs],
+        simStart: startDate,
+        interval: setInterval(this.checkMessages(Date.now()), 500)
       })
     }
   } 
