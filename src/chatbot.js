@@ -34,7 +34,7 @@ export default class Chatbot extends React.Component {
 
     xmpp.on('online', async address =>{
       this.setOnline()      
-      this.systemMsg("Connected to XMPP server as " + this.xmpp.jid.local)
+      this.systemMsg("Connected to XMPP server ("+this.state.service+") as " + this.xmpp.jid.local)
       snackbar.alert("Connected to XMPP server as " + this.xmpp.jid.local, 5000, "green")
     })
 
@@ -47,6 +47,7 @@ export default class Chatbot extends React.Component {
   DOMAIN = process.env.REACT_APP_XMPP_DOMAIN
   USERNAME = process.env.REACT_APP_XMPP_USERNAME
   PASSWORD = process.env.REACT_APP_XMPP_PASSWORD
+  SIMTIME = process.env.REACT_APP_XMPP_SIMTIME
 
   constructor(){
     super()
@@ -61,6 +62,8 @@ export default class Chatbot extends React.Component {
       username:this.USERNAME,
       password:this.PASSWORD,
       service:this.SERVICE,
+      simtime:this.SIMTIME,
+      isEditSettings: false,
     }
   }
   
@@ -97,7 +100,8 @@ export default class Chatbot extends React.Component {
     return () =>  {
       var delta = Date.now() - startTime;
       this.state.messages.forEach((msg, idx) =>{
-        var deltaSec = Math.floor(delta/1000); // convert to seconds
+        var deltaSec = Math.floor(delta/1000); // convert to second
+        this.setState({time:deltaSec})
         var deltaSimSec = ((msg.timestamp - this.state.simStart)/ 1000 )
         if (deltaSec >= deltaSimSec){
           this.sendMessage(msg)
@@ -154,6 +158,14 @@ export default class Chatbot extends React.Component {
     this.xmpp = this.newXmpp(this.state.service, this.state.domain, this.state.username, this.state.password)
   }
 
+  getUserSimTime =() =>{
+    return {
+      hours: parseInt(this.state.simtime.substring(0,2)),
+      minutes: parseInt(this.state.simtime.substring(3,5)),
+      seconds: parseInt(this.state.simtime.substring(6,8)),
+    }
+  }
+
   play = async () => {
     this.props.messages.forEach((msg) => {
       var date = new Date()
@@ -169,11 +181,37 @@ export default class Chatbot extends React.Component {
     })
 
     if (!this.state.interval){
+      if (this.xmpp === undefined){
+        // TODO - connect using newXmpp -- tricky to wait for 'connected' before proceeding to 
+        // next JS event. For now, error and have the user press "connect"
+        snackbar.alert("Chatbot is not connected! Press the connect button.", 5000, "red")
+        return;
+      }
+      
+      if (this.props.filename === undefined){
+        snackbar.alert("No file was selected!",5000,"red"); 
+        return;
+      }
+      else if (this.props.messages.length === 0){
+        snackbar.alert("No messages were loaded!",5000,"yellow"); 
+        return;
+      }
+
       this.setPresenceInRooms()
       this.setState({messages:[...this.props.messages], initMessages: [...this.props.messages]})
 
       snackbar.alert("Injector started!", 3000, 'green')
-      await this.setState({simStart:new Date(2020, 9, 23, 16, 30, 0).getTime() })
+      
+      var today = new Date()
+      var time = this.getUserSimTime()
+      await this.setState({simStart:new Date(
+        today.getFullYear(), 
+        today.getMonth(),
+        today.getDate(),
+        time.hours,
+        time.minutes,
+        time.seconds) 
+      })
     
       this.setState( {
         interval: setInterval(this.checkMessages(Date.now()),500)
@@ -219,6 +257,22 @@ export default class Chatbot extends React.Component {
     }
   }
 
+  toggleEdit = () =>{
+    this.setState({isEditSettings:!this.state.isEditSettings})
+  }
+
+  getCurrentTime = () => { 
+    if (this.state.time === undefined){
+      return this.state.simtime
+    } else {
+      var d = new Date(this.state.simStart.getTime() + this.state.time*1000);
+      var hrs = ("0" + d.getHours()).slice(-2)
+      var mins = ("0" + d.getMinutes()).slice(-2)
+      var secs = ("0" + d.getSeconds()).slice(-2)
+      return hrs +":" + mins + ":" + secs
+    }
+  }
+
   render(){
 
     var msgStr = ""
@@ -230,14 +284,34 @@ export default class Chatbot extends React.Component {
       msgSentStr += msg.time+"-"+msg.window+"-<"+msg.callsign+"> "+msg.text+"\r\n-------------\r\n"
     })
     return (<div style={{width:"100%"}}>
-        <div>Settings:
-          <div><label>Sim Time: </label><input defaultValue="hh:mm:ss" onChange={this.handleInputChange("simtime")}/></div>
-          <div><label>XMPP Service: </label><input defaultValue={this.SERVICE} onChange={this.handleInputChange("service")}/></div>
-          <div><label>Domain: </label><input defaultValue={this.DOMAIN} onChange={this.handleInputChange("domain")}/></div>
-          <div><label>Conference: </label><input defaultValue={this.CONFERENCE} onChange={this.handleInputChange("conference")}/></div>
-          <div><label>Usename: </label><input defaultValue={this.USERNAME} onChange={this.handleInputChange("username")}/></div>
-          <div><label>Password: </label><input defaultValue={this.PASSWORD} onChange={this.handleInputChange("password")}/></div>
-          <button onClick={this.connect}>Connect</button>
+        <div><div style={{display:"inline-flex"}}>
+                Settings: 
+                <button onClick={this.toggleEdit} style={{marginLeft:"10px"}}>{this.state.isEditSettings ? "-":"+"}</button></div>
+          {this.state.isEditSettings && <table>
+            <tbody>
+              <tr>
+                <td>Sim Time:</td><td><input defaultValue={this.SIMTIME} onChange={this.handleInputChange("simtime")}/></td>
+              </tr>
+              <tr>
+                <td>XMPP Service:</td><td><input defaultValue={this.SERVICE} onChange={this.handleInputChange("service")}/></td>
+              </tr>
+              <tr>
+                <td>Domain:</td><td><input defaultValue={this.DOMAIN} onChange={this.handleInputChange("domain")}/></td>
+              </tr>
+              <tr>
+                <td>Conference:</td><td><input defaultValue={this.CONFERENCE} onChange={this.handleInputChange("conference")}/></td>
+              </tr>
+              <tr>
+                <td>Username:</td><td><input defaultValue={this.USERNAME} onChange={this.handleInputChange("username")}/></td>
+              </tr>
+              <tr>
+                <td>Password:</td><td><input defaultValue={this.PASSWORD} onChange={this.handleInputChange("password")}/></td>
+              </tr>
+            </tbody>
+          </table>}
+          <br/>
+          <button style={{width:"25%"}} onClick={this.connect}>Connect</button>
+          <br/><br/>
         </div>
         <div style={{width:"100%", textAlign:"center", alignItems:"center"}}>
           <button style={this.btnStyle} onClick={this.play}>
@@ -250,7 +324,7 @@ export default class Chatbot extends React.Component {
             Reset
           </button>
         </div>
-        <div>Timer</div>
+        <div>{this.getCurrentTime()}</div>
         <div style={{display:"inline-flex", width:"100%"}}>
           <table style={{border:"none"}}>
             <tbody>

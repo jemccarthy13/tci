@@ -33,6 +33,7 @@ export default class TCI extends React.Component {
         <div>Using: {this.state.fileName}</div>}
         <br/>
         <Chatbot 
+          filename={this.state.fileName}
           windows = {this.state.windows}
           messages ={this.state.messages}
         />
